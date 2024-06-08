@@ -1,10 +1,10 @@
 # frozen_string_literal: true
 
-require_relative "lib/justification/version"
+require_relative "lib/affidavit/version"
 
 Gem::Specification.new do |spec|
-  spec.name = "justification"
-  spec.version = Justification::VERSION
+  spec.name = "affidavit"
+  spec.version = Affidavit::VERSION
   spec.authors = ["Pete Kinnecom"]
   spec.email = ["git@k7u7.com"]
 
@@ -17,7 +17,7 @@ Gem::Specification.new do |spec|
   spec.metadata["allowed_push_host"] = "https://rubygems.org"
 
   spec.metadata["homepage_uri"] = spec.homepage
-  spec.metadata["source_code_uri"] = "https://github.com/petekinnecom/justification"
+  spec.metadata["source_code_uri"] = "https://github.com/petekinnecom/affidavit"
   # spec.metadata["changelog_uri"] = "TODO: Put your gem's CHANGELOG.md URL here."
 
   # Specify which files should be added to the gem when it is released.
@@ -34,6 +34,7 @@ Gem::Specification.new do |spec|
 
   # Uncomment to register a new dependency of your gem
   # spec.add_dependency "example-gem", "~> 1.0"
+  spec.add_dependency("activesupport")
 
   # For more information and examples about making a new gem, check out our
   # guide at: https://bundler.io/guides/creating_gem.html

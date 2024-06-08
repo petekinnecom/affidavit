@@ -1,35 +1,103 @@
-# Justification
+# Affidavit
 
-TODO: Delete this and the text below, and describe your gem
+Build artifacts that compute and justify your app's business logic.
 
-Welcome to your new gem! In this directory, you'll find the files you need to be able to package up your Ruby library into a gem. Put your Ruby code in the file `lib/justification`. To experiment with that code, run `bin/console` for an interactive prompt.
+### "Huh? What?" -you (probably)
 
-## Installation
+We programmers tend to write code with the sole aim of computing a certain result and storing it in the database (or presenting it or whatever). In the event that someone asks us how a specific result was achieved, we poke around in the database, trying to reconstruct the data at the time the result was computed. We then look at the code and read through it until we can come to a satisfactory explanation. (Oops, don't forget to check-out the correct version of the code that was deployed at the time the result was computed!)
 
-TODO: Replace `UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG` with your gem name right after releasing it to RubyGems.org. Please do not do it earlier due to security reasons. Alternatively, replace this section with instructions to install your gem from git if you don't plan to release to RubyGems.org.
+This gem helps you write code that both computes the result *and* creates a data-structure that explicitly tells you how that result was achieved.
 
-Install the gem and add to the application's Gemfile by executing:
+### Example!
 
-    $ bundle add UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+A customer buys five $1 apple, one $10 banana. How much do they owe you?
 
-If bundler is not being used to manage dependencies, install the gem by executing:
 
-    $ gem install UPDATE_WITH_YOUR_GEM_NAME_PRIOR_TO_RELEASE_TO_RUBYGEMS_ORG
+Maybe you'd code up something like this:
 
-## Usage
+```ruby
 
-TODO: Write usage instructions here
+# Somewhere deep in the bowels of your system's code:
+PRICES = {
+  apple: 1,
+  banana: 10
+}
 
-## Development
+num_apples = 5
+num_bananas = 1
 
-After checking out the repo, run `bin/setup` to install dependencies. Then, run `rake test` to run the tests. You can also run `bin/console` for an interactive prompt that will allow you to experiment.
+amount_due = [
+  num_apples * PRICES[:apple],
+  num_bananas * PRICES[:banana]
+].sum
 
-To install this gem onto your local machine, run `bundle exec rake install`. To release a new version, update the version number in `version.rb`, and then run `bundle exec rake release`, which will create a git tag for the version, push git commits and the created tag, and push the `.gem` file to [rubygems.org](https://rubygems.org).
+Database.save(receipt_id: "1", amount_due: amount_due)
+```
 
-## Contributing
+The data produced here is limited to the number `15`.
 
-Bug reports and pull requests are welcome on GitHub at https://github.com/[USERNAME]/justification.
+With Affidavit it could look like this:
 
-## License
+```ruby
+include Affidavit::Builder
 
-The gem is available as open source under the terms of the [MIT License](https://opensource.org/licenses/MIT).
+PRICES = {
+  apple: x(1, metadata: { label: "price", fruit: "apple" }),
+  banana: x(10, metadata: { label: "price", fruit: "banana" }),
+}
+
+num_apples = x(5, metadata: { label: "quantity", fruit: "apple" })
+num_bananas = x(1, metadata: { label: "quantity", fruit: "banana" })
+
+amount_due = x([
+  num_apples.x(:*, PRICES[:apple]),
+  num_bananas.x(:*, PRICES[:banana])
+]).x(:sum)
+
+Database.save(
+  receipt_id: "1",
+  amount_due: amount_due.value,
+  affidavit: amount_due.serialize
+)
+```
+
+*Ugh*, you might think to yourself, *looks painful.* And if your only goal is to compute the result, then yes, coding this way would be silly. However, if you want to be able to understand your system's computations after-the-fact, then this is a small price to pay for a giant pile of auditable data.
+
+Let's explore what data it provides:
+
+```ruby
+explorer = Affidavit::Explorer.new(serialized_affidavit)
+
+prices = (
+  explorer
+    .filter_map { |node|
+      next unless node.affidavit.dig("metadata", "label") == "price"
+
+      [node.affidavit.dig("metadata", "fruit"), node.affidavit.dig("value")]
+    }
+    .to_h
+)
+
+quantities = (
+  explorer
+    .filter_map { |node|
+      next unless node.affidavit.dig("metadata", "label") == "quantity"
+
+      [node.affidavit.dig("metadata", "fruit"), node.affidavit.dig("value")]
+    }
+    .to_h
+)
+
+puts "prices: #{prices.inspect}"
+puts "quantities: #{quantities.inspect}"
+
+# prices: {"apple"=>1, "banana"=>10}
+# quantities: {"apple"=>5, "banana"=>1}
+
+# There's plenty more data in there:
+puts amount_due.serialize
+```
+
+# Are you not entertained?
+
+...more to come...
