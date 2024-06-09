@@ -204,4 +204,6 @@ pp(
   daily_prices[1]
   .dig("source", "consequent", "source", "conditionals")[1]
 )
-:ok
+
+require "json"
+File.write("tmp/thing.json", daily_prices.map(&:affidavit).to_json)

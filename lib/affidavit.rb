@@ -5,6 +5,7 @@ require_relative "affidavit/types"
 require_relative "affidavit/builder"
 require_relative "affidavit/serializer"
 require_relative "affidavit/explorer"
+require_relative "affidavit/presenter"
 
 module Affidavit
   class Error < StandardError; end
