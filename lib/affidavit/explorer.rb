@@ -26,6 +26,14 @@ module Affidavit
         @iterables.each(&)
       end
 
+      def dig(...)
+        affidavit.dig(...)
+      end
+
+      def fetch(...)
+        affidavit.fetch(...)
+      end
+
       def path
         @path ||= path_array.join(".")
       end
